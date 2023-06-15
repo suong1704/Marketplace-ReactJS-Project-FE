@@ -1,33 +1,38 @@
-import { USER_ID, getLocalStorage, setLocalStorage } from "./helpers";
+import { TOKEN, USER_ID, getHeader, getLocalStorage, setLocalStorage } from "./helpers";
 
-const baseUrl = "http://localhost:1337/api";
-// tao localstorage khi login
-// lay localstorage gắn vào header với property authorization với content Bear token
-// localStorage.setItem("userId", res.user.id);
-// viet ham set localstorage truyen cai name
-// lay localstorage by name
+const baseUrl = process.env.REACT_APP_BASE_URL;
+
 const headers = {
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${getLocalStorage(USER_ID)}`,
-  },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getLocalStorage(TOKEN)}`,
 };
 
 export async function registerUser(userData) {
-  return (
-    await fetch(`${baseUrl}/auth/register`, {
+  const data = {
+    email: userData.email,
+    password: userData.password,
+    username: userData.name,
+    phoneNumber: userData.phoneNumber,
+    repeatPassword: userData.repeatPassword,
+    gender: userData.gender,
+    lastName: userData.lastName,
+  };
+  const user = (
+    await fetch(`${baseUrl}/auth/registerUser`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify(userData),
+      body: JSON.stringify(data),
     })
   ).json();
+  return user;
 }
 
-export async function loginUser(userData) {
-  const data = { identifier: userData.email, password: userData.password };
+export async function loginUser(user) {
+  const data = { identifier: user.email, password: user.password };
+  console.log(JSON.stringify(data));
   return (
     await fetch(baseUrl + `/auth/local`, {
       method: "POST",
@@ -40,8 +45,12 @@ export async function loginUser(userData) {
   )
     .json()
     .then((res) => {
-      setLocalStorage(USER_ID, res.jwt);
-      return res;
+      setLocalStorage(TOKEN, res.jwt);
+      setLocalStorage(USER_ID, res.user.id);
+      console.log(getLocalStorage(TOKEN));
+      return {
+        user: { _id: res.user.id, ...res.user },
+      };
     })
     .catch((err) => {
       return {
@@ -54,14 +63,17 @@ export async function loginUser(userData) {
 
 export async function getUser() {
   return await (
-    await fetch(baseUrl + "/auth/getUser", { headers, credentials: "include" })
+    await fetch(baseUrl + "/user/getUser", {
+      headers: getHeader(),
+      credentials: "include",
+    })
   ).json();
 }
 
 export async function getUserActiveSells(id) {
   return (
     await fetch(`${baseUrl}/products/sells/active/${id}`, {
-      headers,
+      headers: getHeader(),
       credentials: "include",
     })
   ).json();
@@ -70,7 +82,7 @@ export async function getUserActiveSells(id) {
 export async function getUserArchivedSells() {
   return (
     await fetch(`${baseUrl}/products/sells/archived`, {
-      headers,
+      headers: getHeader(),
       credentials: "include",
     })
   ).json();
@@ -79,7 +91,7 @@ export async function getUserArchivedSells() {
 export async function getUserWishlist() {
   return (
     await fetch(`${baseUrl}/products/wishlist/getWishlist`, {
-      headers,
+      headers: getHeader(),
       credentials: "include",
     })
   ).json();
@@ -89,7 +101,7 @@ export async function editUserProfile(id, data) {
   return (
     await fetch(`${baseUrl}/user/edit-profile/${id}`, {
       method: "PUT",
-      headers,
+      headers: getHeader(),
       credentials: "include",
       body: JSON.stringify(data),
     })
@@ -99,7 +111,7 @@ export async function editUserProfile(id, data) {
 export async function getUserById(id) {
   return await (
     await fetch(baseUrl + `/user/getUserById/${id}`, {
-      headers,
+      headers: getHeader(),
       credentials: "include",
     })
   ).json();

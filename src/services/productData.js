@@ -1,4 +1,6 @@
-const baseUrl = "http://localhost:1337/api";
+import { TOKEN, getHeader, getLocalStorage, setLocalStorage } from "./helpers";
+
+const baseUrl = process.env.REACT_APP_BASE_URL;
 
 export async function getAll(page, category, query) {
   if (query !== "" && query !== undefined) {
@@ -25,6 +27,7 @@ export async function getAll(page, category, query) {
 export async function getSpecific(id) {
   return (
     await fetch(`${baseUrl}/products/specific/${id}`, {
+      headers: getHeader(),
       credentials: "include",
     })
   ).json();
@@ -34,9 +37,7 @@ export async function createProduct(product) {
   return (
     await fetch(`${baseUrl}/products/create`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getHeader(),
       credentials: "include",
       body: JSON.stringify(product),
     })
@@ -47,9 +48,7 @@ export async function editProduct(id, product) {
   return (
     await fetch(`${baseUrl}/products/edit/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getHeader(),
       credentials: "include",
       body: JSON.stringify(product),
     })
@@ -57,18 +56,18 @@ export async function editProduct(id, product) {
 }
 
 export async function activateSell(id) {
-  return (await fetch(`/products/enable/${id}`)).json();
+  return (await fetch(`${baseUrl}/products/enable/${id}`)).json();
 }
 
 export async function archiveSell(id) {
-  return (await fetch(`/products/archive/${id}`)).json();
+  return (await fetch(`${baseUrl}/products/archive/${id}`)).json();
 }
 
-export async function wishProduct(id, userId) {
+export async function wishProduct(id) {
   return (
     await fetch(`${baseUrl}/products/wish/${id}`, {
+      headers: getHeader(),
       credentials: "include",
-      body: JSON.stringify(userId),
     })
   ).json();
 }
